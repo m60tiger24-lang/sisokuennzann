@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>小学3年生 四則演算マスター！</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .bounce-in {
+      animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes bounce {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col items-center justify-center p-3 select-none">
+
+  <!-- メインコンテナ -->
+  <main class="w-full max-w-md bg-white rounded-3xl shadow-xl border-4 border-amber-300 p-5 flex flex-col justify-between min-h-[640px] relative overflow-hidden">
+    
+    <!-- 装飾背景 -->
+    <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-100 rounded-full pointer-events-none"></div>
+    <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-emerald-100 rounded-full pointer-events-none"></div>
+
+    <!-- スタート画面 (モード・難易度選択) -->
+    <div id="start-screen" class="relative z-10 flex flex-col items-center justify-between my-auto text-center space-y-4 w-full">
+      <div class="space-y-1">
+        <span class="inline-block px-3 py-1 bg-amber-200 text-amber-900 rounded-full text-xs font-bold tracking-wider">
+          きょうだいで あそべる！
+        </span>
+        <h1 class="text-3xl font-extrabold text-amber-600 leading-tight">
+          算数チャレンジ！
+        </h1>
+        <p class="text-xs text-slate-500 font-medium">
+          しゅもくと レベルを えらんで スタート！
+        </p>
+      </div>
+
+      <!-- 種目選択 (たし算・ひき算・かけ算・わり算・ぜんぶ) -->
+      <div class="w-full text-left space-y-1.5">
+        <label class="text-xs font-bold text-slate-600 ml-1">① なにをする？（しゅもく）</label>
+        <div class="grid grid-cols-5 gap-1.5" id="op-selector">
+          <button data-op="add" class="op-btn py-2 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-xs sm:text-sm hover:border-amber-400 transition-all active:scale-95 flex flex-col items-center gap-0.5">
+            <span class="text-base">➕</span>
+            <span>たす</span>
+          </button>
+          <button data-op="sub" class="op-btn py-2 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-xs sm:text-sm hover:border-amber-400 transition-all active:scale-95 flex flex-col items-center gap-0.5">
+            <span class="text-base">➖</span>
+            <span>ひく</span>
+          </button>
+          <button data-op="mul" class="op-btn py-2 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-xs sm:text-sm hover:border-amber-400 transition-all active:scale-95 flex flex-col items-center gap-0.5">
+            <span class="text-base">✖️</span>
+            <span>かける</span>
+          </button>
+          <button data-op="div" class="op-btn py-2 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-xs sm:text-sm hover:border-amber-400 transition-all active:scale-95 flex flex-col items-center gap-0.5">
+            <span class="text-base">➗</span>
+            <span>わる</span>
+          </button>
+          <button data-op="all" class="op-btn py-2 px-1 rounded-xl border-2 border-amber-500 bg-amber-100 font-black text-xs sm:text-sm shadow-sm transition-all active:scale-95 flex flex-col items-center gap-0.5 text-amber-800">
+            <span class="text-base">🎲</span>
+            <span>ぜんぶ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 難易度選択 (5段階) -->
+      <div class="w-full text-left space-y-1.5">
+        <label class="text-xs font-bold text-slate-600 ml-1">② どのレベル？（学年めやす）</label>
+        <div class="flex flex-col gap-1.5" id="level-selector">
+          <button data-level="1" class="lvl-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-left font-bold text-xs flex justify-between items-center hover:border-amber-300">
+            <span>⭐ <strong>Lv.1</strong>: 1ねんせい（10〜20の計算）</span>
+            <span class="text-[10px] text-slate-400">やさしい</span>
+          </button>
+          <button data-level="2" class="lvl-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-left font-bold text-xs flex justify-between items-center hover:border-amber-300">
+            <span>⭐⭐ <strong>Lv.2</strong>: 2ねんせい（2けた・九九）</span>
+            <span class="text-[10px] text-slate-400">きほん</span>
+          </button>
+          <button data-level="3" class="lvl-btn p-2 rounded-xl border-2 border-amber-500 bg-amber-50 text-left font-bold text-xs flex justify-between items-center shadow-sm text-amber-900">
+            <span>⭐⭐⭐ <strong>Lv.3</strong>: 3ねんせい（3けた筆算・わり算）</span>
+            <span class="text-[10px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-bold">おすすめ</span>
+          </button>
+          <button data-level="4" class="lvl-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-left font-bold text-xs flex justify-between items-center hover:border-amber-300">
+            <span>⭐⭐⭐⭐ <strong>Lv.4</strong>: 4ねんせい（大きなわり算・小数）</span>
+            <span class="text-[10px] text-slate-400">手ごたえ</span>
+          </button>
+          <button data-level="5" class="lvl-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-left font-bold text-xs flex justify-between items-center hover:border-amber-300">
+            <span>⭐⭐⭐⭐⭐ <strong>Lv.5</strong>: マスター（高学年・スピード）</span>
+            <span class="text-[10px] text-rose-500 font-bold">むずかしい</span>
+          </button>
+        </div>
+      </div>
+
+      <button id="start-btn" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-lg rounded-2xl shadow-lg transition-transform flex items-center justify-center gap-2">
+        <span>この設定でスタート！</span>
+        <span>👉</span>
+      </button>
+    </div>
+
+    <!-- クイズ画面 -->
+    <div id="quiz-screen" class="hidden relative z-10 flex-col flex-1 justify-between">
+      <!-- ヘッダー＆プログレス -->
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-1.5">
+            <span id="question-counter" class="text-xs sm:text-sm font-extrabold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+              だい 1 もん
+            </span>
+            <span id="badge-level" class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+              Lv.3
+            </span>
+          </div>
+          <span id="score-counter" class="text-xs font-bold text-slate-400">
+            せいかい: <span id="current-score" class="text-amber-500 font-extrabold text-sm">0</span> / 10
+          </span>
+        </div>
+        <!-- プログレスバー -->
+        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
+          <div id="progress-bar" class="bg-amber-400 h-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <!-- 問題文カード -->
+      <div class="my-auto py-3">
+        <div class="bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-5 shadow-sm text-center">
+          <p id="question-text" class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-wide leading-relaxed">
+            48 ÷ 6 = ?
+          </p>
+        </div>
+      </div>
+
+      <!-- 選択肢グリッド -->
+      <div id="options-container" class="grid grid-cols-2 gap-3 mb-2">
+        <!-- ボタンはJSで生成 -->
+      </div>
+    </div>
+
+    <!-- フィードバックモーダル (正解・不正解) -->
+    <div id="feedback-overlay" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-20 flex items-center justify-center p-4">
+      <div id="feedback-card" class="bg-white rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl bounce-in border-4">
+        <div id="feedback-icon" class="text-6xl mb-2">⭕</div>
+        <h3 id="feedback-title" class="text-2xl font-black mb-1">せいかい！</h3>
+        <p id="feedback-expl" class="text-sm text-slate-600 mb-5 leading-normal"></p>
+        <button id="next-btn" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-lg rounded-xl shadow-md transition-transform">
+          つぎへ すすむ
+        </button>
+      </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen" class="hidden relative z-10 flex flex-col items-center justify-center my-auto text-center space-y-6">
+      <div id="result-badge" class="text-6xl">🏆</div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-black text-slate-800">けっかはっぴょう！</h2>
+        <div class="text-sm font-bold text-amber-700 bg-amber-100 py-1 px-3 rounded-full inline-block" id="result-settings-badge">
+          Lv.3・ぜんぶミックス
+        </div>
+        <div class="text-5xl font-extrabold text-amber-500 my-2">
+          <span id="final-score">0</span> <span class="text-2xl text-slate-400">/ 10 点</span>
+        </div>
+        <p id="result-msg" class="text-sm text-slate-600 font-medium px-4 leading-relaxed"></p>
+      </div>
+
+      <button id="restart-btn" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-xl rounded-2xl shadow-lg transition-transform flex items-center justify-center gap-2">
+        <span>もういちど あそぶ</span>
+        <span>🔄</span>
+      </button>
+    </div>
+
+  </main>
+
+  <script>
+    // 状態管理
+    let selectedOp = 'all'; // 'add', 'sub', 'mul', 'div', 'all'
+    let selectedLevel = 3;  // 1 〜 5
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+
+    // ユーティリティ関数
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function makeOptions(correctNum, deltas = [-10, 10, -1, 1, 2, -2]) {
+      const correctStr = `${correctNum}`;
+      const set = new Set();
+      set.add(correctStr);
+      let attempts = 0;
+      while (set.size < 4 && attempts < 50) {
+        attempts++;
+        const delta = deltas[randInt(0, deltas.length - 1)];
+        const val = correctNum + delta;
+        if (val >= 0 && val !== correctNum) {
+          set.add(`${val}`);
+        }
+      }
+      while (set.size < 4) {
+        set.add(`${correctNum + set.size + 1}`);
+      }
+      const opts = shuffle(Array.from(set));
+      return {
+        options: opts,
+        answerIndex: opts.indexOf(correctStr)
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 各レベル & 各演算の問題生成関数群
+    // -------------------------------------------------------------
+    const generators = {
+      // ===== レベル 1（小1相当） =====
+      1: {
+        add: () => {
+          const a = randInt(1, 9);
+          const b = randInt(1, 9);
+          const sum = a + b;
+          const { options, answerIndex } = makeOptions(sum, [-2, -1, 1, 2, 3]);
+          return {
+            question: `${a} ＋ ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${a} に ${b} をたすと ${sum} になるよ！`
+          };
+        },
+        sub: () => {
+          const a = randInt(2, 18);
+          const b = randInt(1, Math.min(a, 9));
+          const diff = a - b;
+          const { options, answerIndex } = makeOptions(diff, [-2, -1, 1, 2]);
+          return {
+            question: `${a} − ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${a} から ${b} をひくと ${diff} だね！`
+          };
+        },
+        mul: () => {
+          // 1年生向けには簡単な倍の考え方や1の段など
+          const a = randInt(1, 5);
+          const prod = a * 2;
+          const { options, answerIndex } = makeOptions(prod, [-2, -1, 1, 2]);
+          return {
+            question: `${a} が 2つ で いくつ？`,
+            options,
+            answerIndex,
+            explanation: `${a} ＋ ${a} ＝ ${prod} だね！`
+          };
+        },
+        div: () => {
+          // 1年生向けには半分こ（2で分ける）
+          const half = randInt(1, 5);
+          const total = half * 2;
+          const { options, answerIndex } = makeOptions(half, [-2, -1, 1, 2]);
+          return {
+            question: `${total}こ を 2人で 半分こすると 1人何こ？`,
+            options,
+            answerIndex,
+            explanation: `${half} ＋ ${half} ＝ ${total} だから、1人 ${half}こ だね！`
+          };
+        }
+      },
+
+      // ===== レベル 2（小2相当） =====
+      2: {
+        add: () => {
+          const a = randInt(15, 68);
+          const b = randInt(12, 45);
+          const sum = a + b;
+          const { options, answerIndex } = makeOptions(sum, [-10, 10, -1, 1, -2, 2]);
+          return {
+            question: `${a} ＋ ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `一の位、十の位をそれぞれ足して ${sum} だね！`
+          };
+        },
+        sub: () => {
+          const b = randInt(15, 48);
+          const diff = randInt(12, 45);
+          const a = b + diff;
+          const { options, answerIndex } = makeOptions(diff, [-10, 10, -1, 1]);
+          return {
+            question: `${a} − ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `くり下がりに気をつけてひくと ${diff} だよ！`
+          };
+        },
+        mul: () => {
+          // 九九
+          const a = randInt(2, 9);
+          const b = randInt(2, 9);
+          const prod = a * b;
+          const { options, answerIndex } = makeOptions(prod, [-a, a, -1, 1, 2]);
+          return {
+            question: `${a} × ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${a} の段の九九：${a} × ${b} ＝ ${prod}！`
+          };
+        },
+        div: () => {
+          // 九九の逆算（わり算の導入）
+          const divisor = randInt(2, 5);
+          const quotient = randInt(2, 9);
+          const dividend = divisor * quotient;
+          const { options, answerIndex } = makeOptions(quotient, [-2, -1, 1, 2]);
+          return {
+            question: `${dividend} ÷ ${divisor} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${divisor} × [ ${quotient} ] ＝ ${dividend} だから、答えは ${quotient}！`
+          };
+        }
+      },
+
+      // ===== レベル 3（小3相当） =====
+      3: {
+        add: () => {
+          const a = randInt(135, 580);
+          const b = randInt(150, 390);
+          const sum = a + b;
+          const { options, answerIndex } = makeOptions(sum, [-10, 10, -100, 100, 1]);
+          return {
+            question: `${a} ＋ ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `3けたの筆算でくり上がりに注意しよう。答えは ${sum}！`
+          };
+        },
+        sub: () => {
+          const diff = randInt(120, 450);
+          const b = randInt(130, 480);
+          const a = b + diff;
+          const { options, answerIndex } = makeOptions(diff, [-10, 10, -100, 100]);
+          return {
+            question: `${a} − ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `3けたの筆算でくり下がりに気をつけると、答えは ${diff}！`
+          };
+        },
+        mul: () => {
+          // 何十のかけ算 または 2桁×1桁
+          if (Math.random() > 0.5) {
+            const tens = randInt(2, 8) * 10;
+            const b = randInt(3, 9);
+            const prod = tens * b;
+            const { options, answerIndex } = makeOptions(prod, [-10, 10, -100, 100]);
+            return {
+              question: `${tens} × ${b} ＝ ？`,
+              options,
+              answerIndex,
+              explanation: `${tens / 10} × ${b} ＝ ${(tens / 10) * b} に 0 を1つつけて ${prod} だね！`
+            };
+          } else {
+            const a = randInt(13, 48);
+            const b = randInt(3, 8);
+            const prod = a * b;
+            const { options, answerIndex } = makeOptions(prod, [-10, 10, -5, 5]);
+            return {
+              question: `${a} × ${b} ＝ ？`,
+              options,
+              answerIndex,
+              explanation: `くり上がりに気をつけて筆算すると、答えは ${prod}！`
+            };
+          }
+        },
+        div: () => {
+          // あまりのあるわり算 または 九九わり算
+          if (Math.random() > 0.5) {
+            const divisor = randInt(3, 9);
+            const quotient = randInt(2, 9);
+            const rem = randInt(1, divisor - 1);
+            const dividend = divisor * quotient + rem;
+            const correctStr = `${quotient} あまり ${rem}`;
+            const wrong1 = `${quotient} あまり ${rem + 1 < divisor ? rem + 1 : rem - 1}`;
+            const wrong2 = `${quotient + 1} あまり ${Math.max(1, rem - 1)}`;
+            const wrong3 = `${quotient - 1} あまり ${rem}`;
+            const opts = shuffle([correctStr, wrong1, wrong2, wrong3]);
+            return {
+              question: `${dividend} ÷ ${divisor} ＝ ？`,
+              options: opts,
+              answerIndex: opts.indexOf(correctStr),
+              explanation: `${divisor} × ${quotient} ＝ ${divisor * quotient} で、あまりは ${rem} だね！`
+            };
+          } else {
+            const divisor = randInt(2, 9);
+            const quotient = randInt(2, 9);
+            const dividend = divisor * quotient;
+            const { options, answerIndex } = makeOptions(quotient, [-2, -1, 1, 2]);
+            return {
+              question: `${dividend} ÷ ${divisor} ＝ ？`,
+              options,
+              answerIndex,
+              explanation: `${divisor} × ${quotient} ＝ ${dividend} だから、答えは ${quotient} だよ！`
+            };
+          }
+        }
+      },
+
+      // ===== レベル 4（小4相当） =====
+      4: {
+        add: () => {
+          // 4桁のたし算 または 小数のたし算
+          if (Math.random() > 0.5) {
+            const a = (randInt(12, 85) / 10);
+            const b = (randInt(11, 65) / 10);
+            const sum = Math.round((a + b) * 10) / 10;
+            const correctStr = `${sum}`;
+            const opts = shuffle([correctStr, `${Math.round((sum + 0.1)*10)/10}`, `${Math.round((sum - 0.1)*10)/10}`, `${Math.round((sum + 1)*10)/10}`]);
+            return {
+              question: `${a} ＋ ${b} ＝ ？`,
+              options: opts,
+              answerIndex: opts.indexOf(correctStr),
+              explanation: `小数点の位置をそろえて足すと ${sum} だね！`
+            };
+          } else {
+            const a = randInt(1200, 4800);
+            const b = randInt(1500, 3900);
+            const sum = a + b;
+            const { options, answerIndex } = makeOptions(sum, [-100, 100, -1000, 1000]);
+            return {
+              question: `${a} ＋ ${b} ＝ ？`,
+              options,
+              answerIndex,
+              explanation: `位をそろえて計算しよう。答えは ${sum}！`
+            };
+          }
+        },
+        sub: () => {
+          const a = (randInt(40, 95) / 10);
+          const b = (randInt(12, 38) / 10);
+          const diff = Math.round((a - b) * 10) / 10;
+          const correctStr = `${diff}`;
+          const opts = shuffle([correctStr, `${Math.round((diff + 0.1)*10)/10}`, `${Math.round((diff - 0.1)*10)/10}`, `${Math.round((diff + 1)*10)/10}`]);
+          return {
+            question: `${a} − ${b} ＝ ？`,
+            options: opts,
+            answerIndex: opts.indexOf(correctStr),
+            explanation: `小数点の位置をそろえて引くと ${diff} だよ！`
+          };
+        },
+        mul: () => {
+          // 3桁×2桁 または 2桁×2桁
+          const a = randInt(21, 65);
+          const b = randInt(12, 35);
+          const prod = a * b;
+          const { options, answerIndex } = makeOptions(prod, [-10, 10, -100, 100]);
+          return {
+            question: `${a} × ${b} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `2けた×2けたの筆算を慎重に行うと、答えは ${prod}！`
+          };
+        },
+        div: () => {
+          // 2桁でわるわり算
+          const divisor = randInt(12, 28);
+          const quotient = randInt(3, 9);
+          const dividend = divisor * quotient;
+          const { options, answerIndex } = makeOptions(quotient, [-2, -1, 1, 2]);
+          return {
+            question: `${dividend} ÷ ${divisor} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${divisor} × ${quotient} ＝ ${dividend} だから、商は ${quotient}！`
+          };
+        }
+      },
+
+      // ===== レベル 5（マスター / 高学年相当） =====
+      5: {
+        add: () => {
+          // 複合計算または分数・小数の複雑な加算
+          const a = randInt(15, 45);
+          const b = randInt(12, 35);
+          const c = randInt(10, 50);
+          const sum = a + b + c;
+          const { options, answerIndex } = makeOptions(sum, [-10, 10, -2, 2]);
+          return {
+            question: `${a} ＋ ${b} ＋ ${c} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `前から順番に、またはキリの良い数をまとめて計算すると ${sum}！`
+          };
+        },
+        sub: () => {
+          const a = randInt(500, 1000);
+          const b = randInt(120, 280);
+          const c = randInt(50, 150);
+          const ans = a - b - c;
+          const { options, answerIndex } = makeOptions(ans, [-10, 10, -50, 50]);
+          return {
+            question: `${a} − ${b} − ${c} ＝ ？`,
+            options,
+            answerIndex,
+            explanation: `${a} − (${b} ＋ ${c}) ＝ ${a} − ${b + c} ＝ ${ans} と工夫しても解けるよ！`
+          };
+        },
+        mul: () => {
+          // 小数のかけ算
+          const a = (randInt(12, 45) / 10);
+          const b = randInt(3, 9);
+          const prod = Math.round((a * b) * 10) / 10;
+          const correctStr = `${prod}`;
+          const opts = shuffle([correctStr, `${Math.round((prod + 0.2)*10)/10}`, `${Math.round((prod - 0.2)*10)/10}`, `${Math.round((prod * 10))}`]);
+          return {
+            question: `${a} × ${b} ＝ ？`,
+            options: opts,
+            answerIndex: opts.indexOf(correctStr),
+            explanation: `整数として計算してから小数点を1つ戻すと ${prod} だね！`
+          };
+        },
+        div: () => {
+          // 小数のわり算
+          const quotient = (randInt(12, 45) / 10);
+          const divisor = randInt(2, 6);
+          const dividend = Math.round((quotient * divisor) * 10) / 10;
+          const correctStr = `${quotient}`;
+          const opts = shuffle([correctStr, `${Math.round((quotient + 0.2)*10)/10}`, `${Math.round((quotient - 0.2)*10)/10}`, `${Math.round((quotient * 10))}`]);
+          return {
+            question: `${dividend} ÷ ${divisor} ＝ ？`,
+            options: opts,
+            answerIndex: opts.indexOf(correctStr),
+            explanation: `${dividend} ÷ ${divisor} ＝ ${quotient} だね！`
+          };
+        }
+      }
+    };
+
+    // 出題用問題リストの生成
+    function generateQuiz() {
+      const ops = ['add', 'sub', 'mul', 'div'];
+      quizData = [];
+      for (let i = 0; i < 10; i++) {
+        let op = selectedOp;
+        if (op === 'all') {
+          op = ops[randInt(0, ops.length - 1)];
+        }
+        const generator = generators[selectedLevel][op];
+        quizData.push(generator());
+      }
+    }
+
+    // DOM要素
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    const opButtons = document.querySelectorAll('.op-btn');
+    const lvlButtons = document.querySelectorAll('.lvl-btn');
+
+    const questionCounter = document.getElementById('question-counter');
+    const badgeLevel = document.getElementById('badge-level');
+    const currentScore = document.getElementById('current-score');
+    const progressBar = document.getElementById('progress-bar');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+
+    const feedbackOverlay = document.getElementById('feedback-overlay');
+    const feedbackCard = document.getElementById('feedback-card');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackExpl = document.getElementById('feedback-expl');
+    const nextBtn = document.getElementById('next-btn');
+
+    const finalScore = document.getElementById('final-score');
+    const resultBadge = document.getElementById('result-badge');
+    const resultMsg = document.getElementById('result-msg');
+    const resultSettingsBadge = document.getElementById('result-settings-badge');
+
+    // 種目選択UIの切り替え
+    opButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        opButtons.forEach(b => {
+          b.className = "op-btn py-2 px-1 rounded-xl border-2 border-slate-200 bg-white font-black text-xs sm:text-sm hover:border-amber-400 transition-all active:scale-95 flex flex-col items-center gap-0.5 text-slate-700";
+        });
+        btn.className = "op-btn py-2 px-1 rounded-xl border-2 border-amber-500 bg-amber-100 font-black text-xs sm:text-sm shadow-sm transition-all active:scale-95 flex flex-col items-center gap-0.5 text-amber-800";
+        selectedOp = btn.getAttribute('data-op');
+      });
+    });
+
+    // 難易度選択UIの切り替え
+    lvlButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lvlButtons.forEach(b => {
+          b.className = "lvl-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-left font-bold text-xs flex justify-between items-center hover:border-amber-300 text-slate-700";
+        });
+        btn.className = "lvl-btn p-2 rounded-xl border-2 border-amber-500 bg-amber-50 text-left font-bold text-xs flex justify-between items-center shadow-sm text-amber-900";
+        selectedLevel = parseInt(btn.getAttribute('data-level'), 10);
+      });
+    });
+
+    // バイブレーション
+    function vibrate(pattern) {
+      if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    }
+
+    // スタート
+    startBtn.addEventListener('click', () => {
+      currentQuestion = 0;
+      score = 0;
+      generateQuiz();
+      badgeLevel.textContent = `Lv.${selectedLevel}`;
+      startScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      quizScreen.classList.add('flex');
+      loadQuestion();
+    });
+
+    // リスタート
+    restartBtn.addEventListener('click', () => {
+      resultScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+    });
+
+    // 問題の読み込み
+    function loadQuestion() {
+      const q = quizData[currentQuestion];
+      questionCounter.textContent = `だい ${currentQuestion + 1} もん`;
+      currentScore.textContent = score;
+      progressBar.style.width = `${((currentQuestion) / quizData.length) * 100}%`;
+      questionText.textContent = q.question;
+
+      // 選択肢ボタンの生成
+      optionsContainer.innerHTML = '';
+      q.options.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full min-h-[70px] p-2 text-base sm:text-xl font-black bg-white hover:bg-amber-50 active:scale-95 text-slate-800 border-2 border-slate-200 rounded-2xl shadow-sm transition-all flex items-center justify-center text-center leading-snug";
+        btn.textContent = optText;
+        btn.addEventListener('click', () => handleAnswer(index));
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    // 回答処理
+    function handleAnswer(selectedIndex) {
+      const q = quizData[currentQuestion];
+      const isCorrect = (selectedIndex === q.answerIndex);
+
+      if (isCorrect) {
+        score++;
+        vibrate([50]);
+        feedbackCard.className = "bg-white rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl bounce-in border-4 border-emerald-400";
+        feedbackIcon.textContent = "⭕";
+        feedbackTitle.textContent = "せいかい！";
+        feedbackTitle.className = "text-2xl font-black mb-1 text-emerald-600";
+      } else {
+        vibrate([100, 50, 100]);
+        feedbackCard.className = "bg-white rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl bounce-in border-4 border-rose-400";
+        feedbackIcon.textContent = "❌";
+        feedbackTitle.textContent = "おしい！";
+        feedbackTitle.className = "text-2xl font-black mb-1 text-rose-500";
+      }
+
+      feedbackExpl.textContent = q.explanation;
+      feedbackOverlay.classList.remove('hidden');
+    }
+
+    // 次へボタン
+    nextBtn.addEventListener('click', () => {
+      feedbackOverlay.classList.add('hidden');
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    // 結果画面
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      quizScreen.classList.remove('flex');
+      resultScreen.classList.remove('hidden');
+
+      finalScore.textContent = score;
+
+      const opNames = {
+        add: 'たし算',
+        sub: 'ひき算',
+        mul: 'かけ算',
+        div: 'わり算',
+        all: 'ぜんぶミックス'
+      };
+      resultSettingsBadge.textContent = `Lv.${selectedLevel}（${opNames[selectedOp]}）`;
+
+      if (score === 10) {
+        resultBadge.textContent = "👑";
+        resultMsg.textContent = "パーフェクト！このレベルはもうバッチリ！次のレベルにも挑戦してみよう！";
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } else if (score >= 7) {
+        resultBadge.textContent = "🎉";
+        resultMsg.textContent = "お見事！よくがんばったね！あとすこしで満点だ！";
+      } else if (score >= 4) {
+        resultBadge.textContent = "👍";
+        resultMsg.textContent = "ナイスファイト！まちがえたところをもう一度ふくしゅうしてみよう！";
+      } else {
+        resultBadge.textContent = "🌱";
+        resultMsg.textContent = "なんかいも挑戦して、計算のスピードと正確さをアップさせよう！";
+      }
+    }
+  </script>
+</body>
+</html>
